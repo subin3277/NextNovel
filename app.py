@@ -78,11 +78,8 @@ async def novel_question(dialog_history:str=Form(...)):
     ko_answer = translate(en_answer)
     query = ko_answer.split("\n")
 
-    for i in range(len(query)):
-        if query[i][0].isdigit() and query[i][1:3] == '. ':
-            query[i] = query[i][3:]
-
-    return {"query1" : query[0],"query2" : query[1],"query3" : query[2],"dialog_history" : new_history}
+    tmp = [query[-i].split(". ")[-1] for i in range(1,4)]
+    return {"query1" : tmp[2],"query2" : tmp[1],"query3" : tmp[0],"dialog_history" : new_history}
 
 
 @app.post('/novel/sequence')
