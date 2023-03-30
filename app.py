@@ -78,7 +78,7 @@ async def novel_question(dialog_history:str=Form(...)):
     ko_answer = translate(en_answer)
     query = ko_answer.split("\n")
 
-    tmp = [query[-i].split(". ")[-1] for i in range(1,4)]
+    tmp = [query[-i].split(". ")[-1].split("?")[0]+"?" for i in range(1,4)]
     return {"query1" : tmp[2],"query2" : tmp[1],"query3" : tmp[0],"dialog_history" : new_history}
 
 
