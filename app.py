@@ -31,6 +31,13 @@ def translate(before):
     print(f'번역시간 : {time.time()-start}')
     return after
 
+def replace_word(before):
+    after = before.replace('a drawing of ', '').replace('an image of ', '').replace('a black and white drawing of ', '').replace(
+        'an illustration of ', '').replace('photograph', '').replace('painting', '').replace('portrait', '').replace(
+        'graphic', '').replace('snapshot', '').replace('sketch', '').replace('print', '').replace('photo', '').replace(
+        'cartoon', '')
+    return after
+
 
 @app.post('/novel/start')
 async def novel_start(images: List[UploadFile] = Form(...),
@@ -39,10 +46,16 @@ async def novel_start(images: List[UploadFile] = Form(...),
     for image in images:
         image_bytes.append(await image.read())
 
-    # en_string[] : 이미지 6개 캡셔닝한 결과(영어)
-    en_string = []
+    # caption_string[] : 이미지 6개 캡셔닝한 결과(영어)
+    caption_string = []
     for i in image_bytes:
-        en_string.append(inference_caption(i))
+        caption_string.append(inference_caption(i))
+
+    # en_string[] : caption_string[]에서 "그림" 단어 지우기
+    en_string = []
+    for str in caption_string:
+        en_string.append(replace_word(str))
+    print(en_string)
 
     # gpt에게 캡셔닝과 장르를 던져주고, 소설을 받음.
     # en_answer : 소설(영어)
@@ -55,7 +68,8 @@ async def novel_start(images: List[UploadFile] = Form(...),
     translate_before = ""
     for i in range(len(en_string)):
         translate_before += en_string[i] + "\n"
-    ko_string = translate(translate_before).split("\n")
+    ko_string = [translate(translate_before).split("\n")[-i] for i in range(1, 7)][::-1]
+    print(ko_string)
 
     # ko_answer : 소설(한글)
     ko_answer = translate(en_answer)
@@ -78,8 +92,8 @@ async def novel_question(dialog_history:str=Form(...)):
     ko_answer = translate(en_answer)
     query = ko_answer.split("\n")
 
-    tmp = [query[-i].split(". ")[-1].split("?")[0]+"?" for i in range(1,4)]
-    return {"query1" : tmp[2],"query2" : tmp[1],"query3" : tmp[0],"dialog_history" : new_history}
+    tmp = [query[-i].split(". ")[-1].split("?")[0]+"?" for i in range(1,4)][::-1]
+    return {"query1" : tmp[0],"query2" : tmp[1],"query3" : tmp[2],"dialog_history" : new_history}
 
 
 @app.post('/novel/sequence')
@@ -91,13 +105,14 @@ async def novel_sequence(image: UploadFile = Form(...),
 
     # en_string : 이미지캡셔닝결과(영어)
     image_bytes = await image.read()
-    en_string = inference_caption(image_bytes)
+    en_string = replace_word(inference_caption(image_bytes))
 
     # ko_string : 이미지캡셔닝결과(한글)
     ko_string = translate(en_string)
 
     # en_previous_question : 질문(영어)
     # 한글로 받은 리퀘스트를 영어로 번역해서 gpt에게 쿼리로 던지기
+    print(ko_string)
     en_previous_question = translator.translate(previous_question, dest="en").text
 
     question = "'{}' the answer to th question is '{}'. Act as a Storyteller.".format(en_previous_question,en_string)\
@@ -135,18 +150,31 @@ async def novel_end(dialog_history:str=Form(...)):
 async def image(image: UploadFile = Form(...)):
     image_bytes = await image.read()
     img = Image.open(io.BytesIO(image_bytes))
+    img = img.resize((308,350))
+    # 308 * 350 / diffusion
+    # 608 * 380 / caption
+    # en_string : 이미지캡셔닝(영어)
+    # en_word : 이미지캡셔닝 단어(영어)
+    en_string = replace_word(inference_caption(image_bytes))
+    print(f"캡셔닝 문장 : {en_string}")
+    # question = f'"{en_string}"\nInterpret this sentence and tell me in one word what object you drew'
 
-    # Save the image to a file
+    # start = time.time()
+    # en_word, new_history = chatbot(question, [])
+    # print(f"캡셔닝 단어 : {en_word}")
+    # print(time.time() - start)
+
+    # diffusion 이전 그림 파일 저장
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"diffusion/{current_time}.png"
     img.save(filename)
 
     start = time.time()
-    # res = diffusion_ControlNet.creat_image(filename)
+    # res = diffusion_ControlNet.creat_image(filename, en_string)
     res = img
     print(time.time()-start)
 
-    # Save the image to a file
+    # diffusion 이후 그림 파일 저장
     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"diffusion/{current_time}.png"
     res.save(filename)
