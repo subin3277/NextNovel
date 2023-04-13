@@ -25,20 +25,24 @@
 .arrowup {
   transform: rotate(90deg);
   margin-bottom : 10px;
+  cursor: pointer;
 }
 
 .arrowdown {
   transform: rotate(-90deg);
   margin-top : 10px;
+  cursor: pointer;
 }
 
 .arrowright { 
   transform: rotate(180deg);
   margin-left: 20px;
+  cursor: pointer;
 }
 
 .arrowleft {
-  margin-right : 20px
+  margin-right : 20px;
+  cursor: pointer;
 }
 
 #grid div {
@@ -100,6 +104,7 @@
   position: absolute;
   top: 265px;
   font-size: 50px;
+  cursor: pointer;
 }
 
 .gameover { 

@@ -10,6 +10,17 @@ export default function Block4(){
       }
     
     const [modalisOpen, setModalisOpen] = useState(false)
+
+    const modalset = (state) => {
+        if(state) {
+            document.body.classList.add("stop-scrolling")
+        }
+        else{
+            document.body.classList.remove("stop-scrolling")
+        }
+        setModalisOpen(state)
+    }
+
     return(
         <div className={style.block}>
            <div className={style.title}>이용가이드</div>
@@ -99,7 +110,7 @@ export default function Block4(){
                 가입하고 나만의 소설을 만들어보세요.<br />
                 <span className={style.under}>소설 제작, 감상평, 즐겨찾기 등 다양한 기능들을 체험하세요.</span>
            </div>
-           <div onClick={()=> setModalisOpen(true)}>
+           <div onClick={()=> modalset(true)}>
                 <img  src={process.env.PUBLIC_URL+'/img/NN_LOGO_text.svg'} className={style.under2} alt='NN_LOGO_text'></img>
            </div>
            <div className={style.bonus}>
@@ -115,7 +126,7 @@ export default function Block4(){
             <Modal
                 closeTimeoutMS={200}
                 isOpen={modalisOpen}
-                onRequestClose={() => setModalisOpen(false)}
+                onRequestClose={() => modalset(false)}
                 style={{
                 overlay: {
                     zIndex: "100",

@@ -56,7 +56,7 @@ function Card({props, updatelist}){
             <img src={process.env.PUBLIC_URL+'/icon/comment.svg'} style={{margin:'auto 5px'}} alt='comment'></img>
             <span style={{margin:'0 5px'}}>{props && props.novel_stats.comment_count}</span>
           </div>
-          {props && user.nickname === props.author ?
+          {props && localStorage.getItem('nickname') === props.author ?
             <img onClick={delnovel} src={process.env.PUBLIC_URL+'/icon/trash.svg'} className={style.trash} alt='trash'></img>
             : <></>
           }
